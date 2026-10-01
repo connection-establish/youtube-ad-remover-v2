@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Ad Remover",
+  "version": "1.0.0",
+  "description": "Detects and handles YouTube advertising elements.",
+
+  "permissions": [
+    "declarativeNetRequest"
+  ],
+
+  "host_permissions": [
+    "https://www.youtube.com/*"
+  ],
+
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "youtube_rules",
+        "enabled": true,
+        "path": "rules/rules.json"
+      }
+    ]
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_title": "YouTube Ad Remover",
+    "default_popup": "popup/popup.html"
+  }
+}
