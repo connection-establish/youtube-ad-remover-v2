@@ -1,0 +1,35 @@
+body {
+    width: 260px;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+}
+
+.container {
+    padding: 18px;
+}
+
+h2 {
+    margin-top: 0;
+    font-size: 18px;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+#info {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+}
