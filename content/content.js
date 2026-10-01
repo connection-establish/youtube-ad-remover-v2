@@ -1,93 +1,65 @@
-javascript
-console.log("========== YT AD REMOVER V2 LOADED ==========");
+console.log("========== YT AD REMOVER V3 LOADED ==========");
 
 let lastAdState = false;
-let lastSkipTime = 0;
 
-const SKIP_COOLDOWN = 500;
-
-// Check whether the YouTube player is currently showing an ad
-function isAdShowing() {
+function checkForAd() {
     const player = document.querySelector(".html5-video-player");
 
     if (!player) {
-        return false;
-    }
-
-    return player.classList.contains("ad-showing");
-}
-
-// Find and click YouTube's skip button
-function skipAd() {
-    const now = Date.now();
-
-    // Prevent repeatedly clicking the same button
-    if (now - lastSkipTime < SKIP_COOLDOWN) {
         return;
     }
 
-    const skipButton = document.querySelector(
-        ".ytp-ad-skip-button, " +
-        ".ytp-ad-skip-button-modern, " +
-        ".ytp-ad-skip-button-slot"
-    );
+    const adShowing = player.classList.contains("ad-showing");
 
-    if (!skipButton) {
-        return;
-    }
-
-    console.log("[YT Ad Remover] Skip button found:", skipButton);
-
-    if (
-        !skipButton.disabled &&
-        skipButton.offsetParent !== null
-    ) {
-        console.log(
-            "⏭️ [YT Ad Remover] Clicking skip button"
-        );
-
-        skipButton.click();
-
-        lastSkipTime = now;
-    }
-}
-
-// Check the current YouTube ad state
-function checkForVideoAd() {
-    const player = document.querySelector(
-        ".html5-video-player"
-    );
-
-    if (!player) {
-        return;
-    }
-
-    const adShowing = player.classList.contains(
-        "ad-showing"
-    );
-
-    // Advertisement started
+    // Ad just started
     if (adShowing && !lastAdState) {
-        console.log(
-            "🚨 [YT Ad Remover] VIDEO AD STARTED"
+        console.log("🚨 [YT Ad Remover] VIDEO AD STARTED");
+
+        const video = document.querySelector(".html5-main-video");
+
+        console.log("[YT Ad Remover] Video:", video);
+
+        const buttons = document.querySelectorAll(
+            ".ytp-ad-skip-button, " +
+            ".ytp-ad-skip-button-modern, " +
+            ".ytp-ad-skip-button-slot"
         );
 
-        const video = document.querySelector(
-            ".html5-main-video"
+        console.log(
+            "[YT Ad Remover] Skip buttons:",
+            buttons.length
         );
 
-        console.log(
-            "[YT Ad Remover] Video element:",
-            video
-        );
+        buttons.forEach((button, index) => {
+            console.log(
+                `[YT Ad Remover] Button ${index}:`,
+                button
+            );
+        });
     }
 
-    // Advertisement is active
+    // Ad is currently playing
     if (adShowing) {
-        skipAd();
+        const skipButton = document.querySelector(
+            ".ytp-ad-skip-button, " +
+            ".ytp-ad-skip-button-modern, " +
+            ".ytp-ad-skip-button-slot"
+        );
+
+        if (skipButton) {
+            console.log(
+                "⏭️ [YT Ad Remover] SKIP BUTTON FOUND"
+            );
+
+            skipButton.click();
+
+            console.log(
+                "✅ [YT Ad Remover] SKIP BUTTON CLICKED"
+            );
+        }
     }
 
-    // Advertisement ended
+    // Ad ended
     if (!adShowing && lastAdState) {
         console.log(
             "✅ [YT Ad Remover] VIDEO AD ENDED"
@@ -97,9 +69,8 @@ function checkForVideoAd() {
     lastAdState = adShowing;
 }
 
-// Watch YouTube's dynamic DOM changes
 const observer = new MutationObserver(() => {
-    checkForVideoAd();
+    checkForAd();
 });
 
 observer.observe(document.documentElement, {
@@ -108,11 +79,6 @@ observer.observe(document.documentElement, {
     subtree: true
 });
 
-// Backup checker because YouTube changes its DOM frequently
-setInterval(() => {
-    checkForVideoAd();
-}, 500);
+setInterval(checkForAd, 500);
 
-// Initial check
-checkForVideoAd();
-
+checkForAd();
