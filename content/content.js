@@ -1,84 +1,88 @@
-console.log("========== YT AD REMOVER V3 LOADED ==========");
 
-let lastAdState = false;
+console.log("🚀 [YT Ad Remover] Loaded");
 
-function checkForAd() {
-    const player = document.querySelector(".html5-video-player");
+let adActive = false;
+
+function handleAdState() {
+    const player = document.querySelector("#movie_player");
 
     if (!player) {
         return;
     }
 
-    const adShowing = player.classList.contains("ad-showing");
+    const isAd =
+        player.classList.contains("ad-showing") ||
+        player.classList.contains("ad-interrupting");
 
-    // Ad just started
-    if (adShowing && !lastAdState) {
-        console.log("🚨 [YT Ad Remover] VIDEO AD STARTED");
+    if (isAd && !adActive) {
+        adActive = true;
 
-        const video = document.querySelector(".html5-main-video");
-
-        console.log("[YT Ad Remover] Video:", video);
-
-        const buttons = document.querySelectorAll(
-            ".ytp-ad-skip-button, " +
-            ".ytp-ad-skip-button-modern, " +
-            ".ytp-ad-skip-button-slot"
+        console.log(
+            "🚨 [YT Ad Remover] AD DETECTED IMMEDIATELY"
         );
 
         console.log(
-            "[YT Ad Remover] Skip buttons:",
-            buttons.length
+            "Player:",
+            player
         );
 
-        buttons.forEach((button, index) => {
-            console.log(
-                `[YT Ad Remover] Button ${index}:`,
-                button
-            );
-        });
-    }
-
-    // Ad is currently playing
-    if (adShowing) {
-        const skipButton = document.querySelector(
-            ".ytp-ad-skip-button, " +
-            ".ytp-ad-skip-button-modern, " +
-            ".ytp-ad-skip-button-slot"
-        );
-
-        if (skipButton) {
-            console.log(
-                "⏭️ [YT Ad Remover] SKIP BUTTON FOUND"
-            );
-
-            skipButton.click();
-
-            console.log(
-                "✅ [YT Ad Remover] SKIP BUTTON CLICKED"
-            );
-        }
-    }
-
-    // Ad ended
-    if (!adShowing && lastAdState) {
         console.log(
-            "✅ [YT Ad Remover] VIDEO AD ENDED"
+            "Classes:",
+            player.className
         );
+
+        handleAd(player);
     }
 
-    lastAdState = adShowing;
+    if (!isAd && adActive) {
+        adActive = false;
+
+        console.log(
+            "✅ [YT Ad Remover] AD STATE CLEARED"
+        );
+    }
+}
+
+function handleAd(player) {
+    /*
+     * We deliberately do NOT click Skip.
+     *
+     * We also do NOT change the video.currentTime.
+     *
+     * The next stage will handle the ad before
+     * the ad becomes visible/playable.
+     */
+
+    console.log(
+        "🛡️ [YT Ad Remover] Handling ad..."
+    );
+
+    const adModule =
+        player.querySelector(".video-ads");
+
+    if (adModule) {
+        console.log(
+            "Ad module detected:",
+            adModule
+        );
+    }
 }
 
 const observer = new MutationObserver(() => {
-    checkForAd();
+    handleAdState();
 });
 
 observer.observe(document.documentElement, {
+    subtree: true,
     attributes: true,
-    attributeFilter: ["class"],
-    subtree: true
+    attributeFilter: [
+        "class"
+    ]
 });
 
-setInterval(checkForAd, 500);
+// Initial check
+handleAdState();
 
-checkForAd();
+console.log(
+    "✅ [YT Ad Remover] MutationObserver running"
+);
