@@ -1,92 +1,105 @@
-console.log("[YT Ad Remover] Content script loaded");
+javascript
+console.log("========== YT AD REMOVER V2 LOADED ==========");
 
-let adWasDetected = false;
-let lastAdAction = 0;
+let lastAdState = false;
+let lastSkipTime = 0;
 
-function getPlayer() {
-    return document.querySelector(".html5-video-player");
+const SKIP_COOLDOWN = 500;
+
+// Check whether the YouTube player is currently showing an ad
+function isAdShowing() {
+    const player = document.querySelector(".html5-video-player");
+
+    if (!player) {
+        return false;
+    }
+
+    return player.classList.contains("ad-showing");
 }
 
-function getVideo() {
-    return document.querySelector(
-        ".html5-main-video"
+// Find and click YouTube's skip button
+function skipAd() {
+    const now = Date.now();
+
+    // Prevent repeatedly clicking the same button
+    if (now - lastSkipTime < SKIP_COOLDOWN) {
+        return;
+    }
+
+    const skipButton = document.querySelector(
+        ".ytp-ad-skip-button, " +
+        ".ytp-ad-skip-button-modern, " +
+        ".ytp-ad-skip-button-slot"
     );
+
+    if (!skipButton) {
+        return;
+    }
+
+    console.log("[YT Ad Remover] Skip button found:", skipButton);
+
+    if (
+        !skipButton.disabled &&
+        skipButton.offsetParent !== null
+    ) {
+        console.log(
+            "⏭️ [YT Ad Remover] Clicking skip button"
+        );
+
+        skipButton.click();
+
+        lastSkipTime = now;
+    }
 }
 
-function handleVideoAd() {
-    const player = getPlayer();
+// Check the current YouTube ad state
+function checkForVideoAd() {
+    const player = document.querySelector(
+        ".html5-video-player"
+    );
 
     if (!player) {
         return;
     }
 
-    const adShowing =
-        player.classList.contains("ad-showing");
+    const adShowing = player.classList.contains(
+        "ad-showing"
+    );
 
-    if (!adShowing) {
-        if (adWasDetected) {
-            console.log(
-                "[YT Ad Remover] Advertisement finished"
-            );
-
-            adWasDetected = false;
-        }
-
-        return;
-    }
-
-    const now = Date.now();
-
-    // Prevent repeatedly executing the same action
-    if (now - lastAdAction < 1000) {
-        return;
-    }
-
-    lastAdAction = now;
-
-    if (!adWasDetected) {
+    // Advertisement started
+    if (adShowing && !lastAdState) {
         console.log(
-            "🚨 YouTube video advertisement detected"
+            "🚨 [YT Ad Remover] VIDEO AD STARTED"
         );
 
-        adWasDetected = true;
-    }
+        const video = document.querySelector(
+            ".html5-main-video"
+        );
 
-    const video = getVideo();
-
-    if (video) {
         console.log(
-            "[YT Ad Remover] Ad video detected:",
+            "[YT Ad Remover] Video element:",
             video
         );
     }
 
-    // Look for YouTube's skip button
-    const skipButton =
-        document.querySelector(
-            ".ytp-ad-skip-button"
-        ) ||
-        document.querySelector(
-            ".ytp-ad-skip-button-modern"
-        );
-
-    if (skipButton) {
-        console.log(
-            "[YT Ad Remover] Skip button found"
-        );
-
-        skipButton.click();
-
-        return;
+    // Advertisement is active
+    if (adShowing) {
+        skipAd();
     }
 
-    console.log(
-        "[YT Ad Remover] Skip button not available yet"
-    );
+    // Advertisement ended
+    if (!adShowing && lastAdState) {
+        console.log(
+            "✅ [YT Ad Remover] VIDEO AD ENDED"
+        );
+    }
+
+    lastAdState = adShowing;
 }
 
+// Watch YouTube's dynamic DOM changes
 const observer = new MutationObserver(() => {
-    handleVideoAd();
+    checkForVideoAd();
 });
 
 observer.observe(document.documentElement, {
@@ -95,6 +108,11 @@ observer.observe(document.documentElement, {
     subtree: true
 });
 
-setInterval(handleVideoAd, 500);
+// Backup checker because YouTube changes its DOM frequently
+setInterval(() => {
+    checkForVideoAd();
+}, 500);
 
-handleVideoAd();
+// Initial check
+checkForVideoAd();
+
